@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <iterator>
 #include <string>
 #include <vector>
 #include <algorithm>
