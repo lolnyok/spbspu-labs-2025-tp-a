@@ -4,12 +4,8 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <cassert>
-#include <iterator>
 #include <vector>
-#include <iomanip>
 #include <algorithm>
-#include <bitset>
 
 namespace fedorova
 {
@@ -46,10 +42,11 @@ namespace fedorova
     std::string exp;
   };
 
-  class iofmtguard {
+  class IoGuard
+{
   public:
-    explicit iofmtguard(std::basic_ios<char>& s);
-    ~iofmtguard();
+    explicit IoGuard(std::basic_ios<char>& s);
+    ~IoGuard();
   private:
     std::basic_ios<char>& s_;
     std::streamsize width_;
@@ -66,5 +63,5 @@ namespace fedorova
   std::istream& operator>>(std::istream& is, DataStruct& data);
   std::ostream& operator<<(std::ostream& os, const DataStruct& data);
 };
-#endif // !DATA_STRUCT_H
+#endif
 
