@@ -192,7 +192,8 @@ std::ostream& fedorova::operator<<(std::ostream& os, const DataStruct& data)
 
     os << "(:"
         << "key1 " << data.key1 << "ull" << ":"
-        << "key2 " << "0b" << std::string(data.key2.leading_zeros, '0') << std::bitset<64>(data.key2.value).to_string().substr(64 - (64 - data.key2.leading_zeros)) << ":"
+        << "key2 " << "0b" << std::string(data.key2.leading_zeros, '0')
+        << std::bitset<64>(data.key2.value).to_string().substr(64 - (64 - data.key2.leading_zeros)) << ":"
         << "key3 " << "\"" << data.key3 << "\""
         << ":)";
 
