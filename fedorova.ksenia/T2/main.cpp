@@ -1,11 +1,12 @@
 #include <iostream>
-#include <iterator>
 #include <limits>
+#include <iterator>
 #include <vector>
 #include <algorithm>
 #include "DataStruct.h"
 
-int main() {
+int main()
+{
     using fedorova::DataStruct;
     using istreamDataStruct = std::istream_iterator< DataStruct >;
     using ostreamDataStruct = std::ostream_iterator< DataStruct >;

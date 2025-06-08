@@ -1,8 +1,7 @@
-#include "DataStruct.h"
-
+#include <iostream>
 #include <sstream>
-#include <bitset>
-#include <string>
+#include <limits>
+#include "DataStruct.h"
 
 std::istream& fedorova::operator>>(std::istream& is, DelimiterIO&& dest)
 {
@@ -31,7 +30,6 @@ std::istream& fedorova::operator>>(std::istream& is, ULLLiteralIO&& dest)
     }
 
     is >> dest.ref;
-
     if (is)
     {
         is >> DelimiterIO{ 'u' } >> DelimiterIO{ 'l' } >> DelimiterIO{ 'l' };
@@ -40,53 +38,41 @@ std::istream& fedorova::operator>>(std::istream& is, ULLLiteralIO&& dest)
     return is;
 }
 
-std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest) {
+std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
+{
     std::istream::sentry sentry(is);
     if (!sentry)
     {
         return is;
     }
 
-    is >> DelimiterIO{ '0' };
-    char b = '0';
-    is >> b;
-    if (b != 'b' && b != 'B') {
-        is.setstate(std::ios::failbit);
-        return is;
-    }
+    is >> DelimiterIO{ '0' } >> DelimiterIO{ 'b' };
 
-    std::string bits = "";
-    char c = '0';
-    size_t leading_zeros = 0;
-    bool counting_zeros = true;
+    unsigned long long value = 0;
+    bool has_digits = false;
 
-    while (is.get(c)) {
-        if (c == '0' || c == '1') {
-            bits += c;
-            if (counting_zeros && c == '0') {
-                leading_zeros++;
-            }
-            else {
-                counting_zeros = false;
-            }
+    while (true)
+    {
+        char c = is.peek();
+        if (c == '0' || c == '1')
+        {
+            is.get();
+            value = (value << 1) | (c - '0');
+            has_digits = true;
         }
-        else {
-            is.unget();
+        else
+        {
             break;
         }
     }
 
-    if (bits.empty()) {
+    if (!has_digits)
+    {
         is.setstate(std::ios::failbit);
-        return is;
     }
-
-    try {
-        dest.ref = std::stoull(bits, nullptr, 2);
-        dest.leading_zeros = leading_zeros;
-    }
-    catch (...) {
-        is.setstate(std::ios::failbit);
+    else
+    {
+        dest.ref = value;
     }
 
     return is;
@@ -111,11 +97,11 @@ std::istream& fedorova::operator>>(std::istream& is, LabelIO&& dest)
         return is;
     }
 
-    char key;
-    for (size_t i = 0; i < dest.exp.size(); i++)
+    for (char exp_char : dest.exp)
     {
-        is >> key;
-        if (!is && key != dest.exp[i])
+        char c;
+        is >> c;
+        if (c != exp_char)
         {
             is.setstate(std::ios::failbit);
             break;
@@ -145,22 +131,17 @@ std::istream& fedorova::operator>>(std::istream& is, DataStruct& data)
             is >> fieldName;
             if (fieldName == ":key1" && key1)
             {
-                is >> ULLLiteralIO{ data.key1 };
-                in.key1 = data.key1;
+                is >> ULLLiteralIO{ in.key1 };
                 key1 = false;
             }
             else if (fieldName == ":key2" && key2)
             {
-                size_t leading_zeros = 0;
-                is >> ULLBinaryIO{ data.key2.value, leading_zeros };
-                data.key2.leading_zeros = leading_zeros;
-                in.key2 = data.key2;
+                is >> ULLBinaryIO{ in.key2 };
                 key2 = false;
             }
             else if (fieldName == ":key3" && key3)
             {
-                is >> StringIO{ data.key3 };
-                in.key3 = data.key3;
+                is >> StringIO{ in.key3 };
                 key3 = false;
             }
             else
@@ -190,12 +171,29 @@ std::ostream& fedorova::operator<<(std::ostream& os, const DataStruct& data)
 
     IoGuard fmtguard(os);
 
-    os << "(:"
-        << "key1 " << data.key1 << "ull" << ":"
-        << "key2 " << "0b" << std::string(data.key2.leading_zeros, '0')
-        << std::bitset<64>(data.key2.value).to_string().substr(64 - (64 - data.key2.leading_zeros)) << ":"
-        << "key3 " << "\"" << data.key3 << "\""
-        << ":)";
+    os << "(:key1 " << data.key1 << "ull"
+        << ":key2 0b";
+
+    if (data.key2 == 0)
+    {
+        os << "0";
+    }
+    else
+    {
+        unsigned long long mask = 1ULL << (sizeof(data.key2) * 8 - 1);
+        while ((mask & data.key2) == 0 && mask != 0)
+        {
+            mask >>= 1;
+        }
+
+        while (mask != 0)
+        {
+            os << ((data.key2 & mask) ? "1" : "0");
+            mask >>= 1;
+        }
+    }
+
+    os << ":key3 \"" << data.key3 << "\":)";
 
     return os;
 }
@@ -223,9 +221,9 @@ bool fedorova::compareDataStruct(const DataStruct& a, const DataStruct& b)
         return a.key1 < b.key1;
     }
 
-    if (a.key2.value != b.key2.value)
+    if (a.key2 != b.key2)
     {
-        return a.key2.value < b.key2.value;
+        return a.key2 < b.key2;
     }
 
     return a.key3.length() < b.key3.length();

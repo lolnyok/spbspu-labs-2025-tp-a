@@ -8,11 +8,7 @@ namespace fedorova
     struct DataStruct
     {
         unsigned long long key1;
-        struct
-        {
-            unsigned long long value;
-            size_t leading_zeros;
-        } key2;
+        unsigned long long key2;
         std::string key3;
     };
 
@@ -24,13 +20,11 @@ namespace fedorova
     struct ULLLiteralIO
     {
         unsigned long long& ref;
-        std::string suffix;
     };
 
     struct ULLBinaryIO
     {
         unsigned long long& ref;
-        size_t& leading_zeros;
     };
 
     struct StringIO
@@ -43,7 +37,8 @@ namespace fedorova
         std::string exp;
     };
 
-    class IoGuard {
+    class IoGuard
+    {
     public:
         explicit IoGuard(std::basic_ios<char>& s);
         ~IoGuard();
@@ -64,4 +59,5 @@ namespace fedorova
     std::istream& operator>>(std::istream& is, DataStruct& data);
     std::ostream& operator<<(std::ostream& os, const DataStruct& data);
 };
-#endif // !DATA_STRUCT_H
+
+#endif
