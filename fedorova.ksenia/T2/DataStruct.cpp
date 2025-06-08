@@ -49,6 +49,7 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
     is >> DelimiterIO{ '0' } >> DelimiterIO{ 'b' };
 
     unsigned long long value = 0;
+    size_t bit_count = 0;
     bool has_digits = false;
 
     while (true)
@@ -58,6 +59,7 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
         {
             is.get();
             value = (value << 1) | (c - '0');
+            bit_count++;
             has_digits = true;
         }
         else
@@ -73,6 +75,7 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
     else
     {
         dest.ref = value;
+        dest.bits = bit_count;
     }
 
     return is;
@@ -119,6 +122,7 @@ std::istream& fedorova::operator>>(std::istream& is, DataStruct& data)
     }
 
     DataStruct in;
+    in.key2_bits = 0;
 
     {
         bool key1 = true, key2 = true, key3 = true;
@@ -136,7 +140,7 @@ std::istream& fedorova::operator>>(std::istream& is, DataStruct& data)
             }
             else if (fieldName == ":key2" && key2)
             {
-                is >> ULLBinaryIO{ in.key2 };
+                is >> ULLBinaryIO{ in.key2, in.key2_bits };
                 key2 = false;
             }
             else if (fieldName == ":key3" && key3)
@@ -174,22 +178,16 @@ std::ostream& fedorova::operator<<(std::ostream& os, const DataStruct& data)
     os << "(:key1 " << data.key1 << "ull"
         << ":key2 0b";
 
-    if (data.key2 == 0)
+    if (data.key2_bits == 0)
     {
         os << "0";
     }
     else
     {
-        unsigned long long mask = 1ULL << (sizeof(data.key2) * 8 - 1);
-        while ((mask & data.key2) == 0 && mask != 0)
+        unsigned long long mask = 1ULL << (data.key2_bits - 1);
+        for (size_t i = 0; i < data.key2_bits; i++)
         {
-            mask >>= 1;
-        }
-
-        while (mask != 0)
-        {
-            os << ((data.key2 & mask) ? "1" : "0");
-            mask >>= 1;
+            os << ((data.key2 & (mask >> i)) ? "1" : "0");
         }
     }
 
@@ -220,11 +218,9 @@ bool fedorova::compareDataStruct(const DataStruct& a, const DataStruct& b)
     {
         return a.key1 < b.key1;
     }
-
     if (a.key2 != b.key2)
     {
         return a.key2 < b.key2;
     }
-
     return a.key3.length() < b.key3.length();
 }

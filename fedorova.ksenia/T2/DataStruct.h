@@ -9,6 +9,7 @@ namespace fedorova
     {
         unsigned long long key1;
         unsigned long long key2;
+        size_t key2_bits;
         std::string key3;
     };
 
@@ -25,6 +26,7 @@ namespace fedorova
     struct ULLBinaryIO
     {
         unsigned long long& ref;
+        size_t& bits;
     };
 
     struct StringIO
