@@ -24,19 +24,19 @@ std::istream& fedorova::operator>>(std::istream& is, DelimiterIO&& dest)
 std::istream& fedorova::operator>>(std::istream& is, ULLLiteralIO&& dest)
 {
   std::istream::sentry sentry(is);
-  if (!sentry) 
+  if (!sentry)
   {
     return is;
   }
 
   is >> dest.ref;
 
-  if (is) 
+  if (is)
   {
     char u, l1, l2;
     is >> u >> l1 >> l2;
 
-    if (tolower(u) != 'u' || tolower(l1) != 'l' || tolower(l2) != 'l') 
+    if (tolower(u) != 'u' || tolower(l1) != 'l' || tolower(l2) != 'l')
     {
       is.setstate(std::ios::failbit);
     }
@@ -56,7 +56,7 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
   char first, second;
   is >> first >> second;
 
-  if (first != '0' || tolower(second) != 'b') 
+  if (first != '0' || tolower(second) != 'b')
   {
     is.setstate(std::ios::failbit);
     return is;
@@ -66,7 +66,7 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
   size_t bit_count = 0;
   bool has_digits = false;
 
-  while (true) 
+  while (true)
   {
     char c = is.peek();
     if (c == '0' || c == '1')
@@ -76,7 +76,7 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
       bit_count++;
       has_digits = true;
     }
-    else 
+    else
     {
       break;
     }
@@ -86,7 +86,7 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
   {
     is.setstate(std::ios::failbit);
   }
-  else 
+  else
   {
     dest.ref = value;
     dest.bits = bit_count;
@@ -140,12 +140,12 @@ std::istream& fedorova::operator>>(std::istream& is, DataStruct& data)
 
   is >> DelimiterIO{ '(' };
 
-  while (is && (!key1 || !key2 || !key3)) 
+  while (is && (!key1 || !key2 || !key3))
   {
     std::string fieldName;
     if (!(is >> fieldName)) break;
 
-    if (fieldName == ":key1" && !key1) 
+    if (fieldName == ":key1" && !key1)
     {
       is >> ULLLiteralIO{ in.key1 };
       key1 = true;
@@ -155,24 +155,24 @@ std::istream& fedorova::operator>>(std::istream& is, DataStruct& data)
       is >> ULLBinaryIO{ in.key2, in.key2_bits };
       key2 = true;
     }
-    else if (fieldName == ":key3" && !key3) 
+    else if (fieldName == ":key3" && !key3)
     {
       is >> StringIO{ in.key3 };
       key3 = true;
     }
-    else 
+    else
     {
       is.setstate(std::ios::failbit);
       break;
     }
   }
 
-  if (is) 
+  if (is)
   {
     is >> DelimiterIO{ ':' } >> DelimiterIO{ ')' };
   }
 
-  if (is) 
+  if (is)
   {
     data = in;
   }
