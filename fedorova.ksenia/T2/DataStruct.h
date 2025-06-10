@@ -9,7 +9,7 @@ namespace fedorova
   {
     unsigned long long key1;
     unsigned long long key2;
-    bool key2_has_leading_zero;
+    bool key2_has_leading_zero = false;
     std::string key3;
   };
 
