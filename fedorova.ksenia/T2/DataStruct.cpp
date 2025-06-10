@@ -63,8 +63,9 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
   }
 
   unsigned long long value = 0;
-  size_t bit_count = 0;
   bool has_digits = false;
+  bool has_leading_zero = false;
+  bool first_digit = true;
 
   while (true)
   {
@@ -72,8 +73,12 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
     if (c == '0' || c == '1')
     {
       is.get();
+      if (first_digit && c == '0')
+      {
+        has_leading_zero = true;
+      }
+      first_digit = false;
       value = (value << 1) | (c - '0');
-      bit_count++;
       has_digits = true;
     }
     else
@@ -89,7 +94,7 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
   else
   {
     dest.ref = value;
-    dest.bits = bit_count;
+    dest.has_leading_zero = has_leading_zero;
   }
 
   return is;
@@ -152,7 +157,7 @@ std::istream& fedorova::operator>>(std::istream& is, DataStruct& data)
     }
     else if (fieldName == ":key2" && !key2)
     {
-      is >> ULLBinaryIO{ in.key2, in.key2_bits };
+      is >> ULLBinaryIO{ in.key2, in.key2_has_leading_zero };
       key2 = true;
     }
     else if (fieldName == ":key3" && !key3)
@@ -193,16 +198,27 @@ std::ostream& fedorova::operator<<(std::ostream& os, const DataStruct& data)
   os << "(:key1 " << data.key1 << "ull"
     << ":key2 0b";
 
-  if (data.key2_bits == 0)
+  if (data.key2 == 0)
   {
     os << "0";
   }
   else
   {
-    unsigned long long mask = 1ULL << (data.key2_bits - 1);
-    for (size_t i = 0; i < data.key2_bits; i++)
+    if (data.key2_has_leading_zero)
     {
-      os << ((data.key2 & (mask >> i)) ? "1" : "0");
+      os << "0";
+    }
+
+    unsigned long long mask = 1ULL << 63;
+    while (mask && !(data.key2 & mask))
+    {
+      mask >>= 1;
+    }
+
+    while (mask)
+    {
+      os << ((data.key2 & mask) ? "1" : "0");
+      mask >>= 1;
     }
   }
 
