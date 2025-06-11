@@ -64,20 +64,22 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
 
   unsigned long long value = 0;
   bool has_digits = false;
-  bool has_leading_zero = false;
-  bool first_digit = true;
+  dest.has_leading_zero = false;
+  bool first_digit_zero = false;
 
-  while (true)
-  {
+  while (true) {
     char c = is.peek();
     if (c == '0' || c == '1')
     {
       is.get();
-      if (first_digit && c == '0')
+      if (!has_digits && c == '0')
       {
-        has_leading_zero = true;
+        first_digit_zero = true;
       }
-      first_digit = false;
+      else if (first_digit_zero && !dest.has_leading_zero)
+      {
+        dest.has_leading_zero = true;
+      }
       value = (value << 1) | (c - '0');
       has_digits = true;
     }
@@ -94,7 +96,6 @@ std::istream& fedorova::operator>>(std::istream& is, ULLBinaryIO&& dest)
   else
   {
     dest.ref = value;
-    dest.has_leading_zero = has_leading_zero;
   }
 
   return is;
@@ -134,12 +135,6 @@ std::istream& fedorova::operator>>(std::istream& is, LabelIO&& dest)
 
 std::istream& fedorova::operator>>(std::istream& is, DataStruct& data)
 {
-  std::istream::sentry sentry(is);
-  if (!sentry)
-  {
-    return is;
-  }
-
   DataStruct in;
   bool key1 = false, key2 = false, key3 = false;
 
@@ -148,8 +143,10 @@ std::istream& fedorova::operator>>(std::istream& is, DataStruct& data)
   while (is && (!key1 || !key2 || !key3))
   {
     std::string fieldName;
-    if (!(is >> fieldName)) break;
-
+    if (!(is >> fieldName))
+    {
+      break;
+    }
     if (fieldName == ":key1" && !key1)
     {
       is >> ULLLiteralIO{ in.key1 };
@@ -194,7 +191,6 @@ std::ostream& fedorova::operator<<(std::ostream& os, const DataStruct& data)
   }
 
   IoGuard fmtguard(os);
-
   os << "(:key1 " << data.key1 << "ull"
     << ":key2 0b";
 
@@ -209,7 +205,7 @@ std::ostream& fedorova::operator<<(std::ostream& os, const DataStruct& data)
       os << "0";
     }
 
-    unsigned long long mask = 1ULL << 63;
+    unsigned long long mask = 1ULL << (sizeof(data.key2) * 8 - 1);
     while (mask && !(data.key2 & mask))
     {
       mask >>= 1;
@@ -223,7 +219,6 @@ std::ostream& fedorova::operator<<(std::ostream& os, const DataStruct& data)
   }
 
   os << ":key3 \"" << data.key3 << "\":)";
-
   return os;
 }
 

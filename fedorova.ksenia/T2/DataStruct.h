@@ -27,7 +27,7 @@ namespace fedorova
   struct ULLBinaryIO
   {
     unsigned long long& ref;
-    bool has_leading_zero;
+    bool& has_leading_zero;
     char prefix[2];
   };
 
