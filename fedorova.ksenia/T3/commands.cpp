@@ -69,7 +69,7 @@ namespace fedorova
       {
         size_t vrt_cnt = std::stoull(subcommand);
         if (vrt_cnt < 3) throw std::invalid_argument("invalid vertex count");
-        res = sumAreaIf(plgs, VrtCntCheck{ vrt_cnt });
+        res = sumAreaIf(plgs, VrtCntCheck{vrt_cnt});
       }
       out << std::fixed << std::setprecision(1) << res;
     }
@@ -90,30 +90,23 @@ namespace fedorova
     std::string subcommand;
     in >> subcommand;
 
-    try
+    if (subcommand == "AREA")
     {
-      if (subcommand == "AREA")
-      {
-        auto it = std::max_element(plgs.begin(), plgs.end(),
-          [](const Polygon& a, const Polygon& b) {
-            return getArea(a) < getArea(b);
-          });
-        out << std::fixed << std::setprecision(1) << getArea(*it);
-      }
-      else if (subcommand == "VERTEXES")
-      {
-        auto it = std::max_element(plgs.begin(), plgs.end(),
-          [](const Polygon& a, const Polygon& b) {
-            return a.points.size() < b.points.size();
-          });
-        out << it->points.size();
-      }
-      else
-      {
-        out << "<INVALID COMMAND>";
-      }
+      auto it = std::max_element(plgs.begin(), plgs.end(),
+        [](const Polygon& a, const Polygon& b) {
+          return getArea(a) < getArea(b);
+        });
+      out << std::fixed << std::setprecision(1) << getArea(*it);
     }
-    catch (...)
+    else if (subcommand == "VERTEXES")
+    {
+      auto it = std::max_element(plgs.begin(), plgs.end(),
+        [](const Polygon& a, const Polygon& b) {
+          return a.points.size() < b.points.size();
+        });
+      out << it->points.size();
+    }
+    else
     {
       out << "<INVALID COMMAND>";
     }
@@ -130,30 +123,23 @@ namespace fedorova
     std::string subcommand;
     in >> subcommand;
 
-    try
+    if (subcommand == "AREA")
     {
-      if (subcommand == "AREA")
-      {
-        auto it = std::min_element(plgs.begin(), plgs.end(),
-          [](const Polygon& a, const Polygon& b) {
-            return getArea(a) < getArea(b);
-          });
-        out << std::fixed << std::setprecision(1) << getArea(*it);
-      }
-      else if (subcommand == "VERTEXES")
-      {
-        auto it = std::min_element(plgs.begin(), plgs.end(),
-          [](const Polygon& a, const Polygon& b) {
-            return a.points.size() < b.points.size();
-          });
-        out << it->points.size();
-      }
-      else
-      {
-        out << "<INVALID COMMAND>";
-      }
+      auto it = std::min_element(plgs.begin(), plgs.end(),
+        [](const Polygon& a, const Polygon& b) {
+          return getArea(a) < getArea(b);
+        });
+      out << std::fixed << std::setprecision(1) << getArea(*it);
     }
-    catch (...)
+    else if (subcommand == "VERTEXES")
+    {
+      auto it = std::min_element(plgs.begin(), plgs.end(),
+        [](const Polygon& a, const Polygon& b) {
+          return a.points.size() < b.points.size();
+        });
+      out << it->points.size();
+    }
+    else
     {
       out << "<INVALID COMMAND>";
     }
@@ -164,25 +150,28 @@ namespace fedorova
     std::string subcommand;
     in >> subcommand;
 
-    std::unordered_map<std::string, std::function<size_t()>> subcmds = {
-      {"EVEN", [&]() { return countIf(plgs, isEvenVrts); }},
-      {"ODD", [&]() { return countIf(plgs, isOddVrts); }}
-    };
-
     try
     {
-      size_t cnt;
-      if (subcmds.count(subcommand))
+      if (subcommand == "EVEN")
       {
-        cnt = subcmds.at(subcommand)();
+        out << std::count_if(plgs.begin(), plgs.end(),
+          [](const Polygon& p) { return p.points.size() % 2 == 0; });
+      }
+      else if (subcommand == "ODD")
+      {
+        out << std::count_if(plgs.begin(), plgs.end(),
+          [](const Polygon& p) { return p.points.size() % 2 != 0; });
       }
       else
       {
         size_t vrt_cnt = std::stoull(subcommand);
-        if (vrt_cnt < 3) throw std::invalid_argument("invalid vertex count");
-        cnt = countIf(plgs, VrtCntCheck{ vrt_cnt });
+        if (vrt_cnt < 3)
+        {
+          throw std::invalid_argument("invalid vertex count");
+        }
+        out << std::count_if(plgs.begin(), plgs.end(),
+          [vrt_cnt](const Polygon& p) { return p.points.size() == vrt_cnt; });
       }
-      out << cnt;
     }
     catch (...)
     {
